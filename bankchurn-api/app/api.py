@@ -6,9 +6,25 @@ import pandas as pd
 from fastapi import APIRouter, HTTPException
 from fastapi.encoders import jsonable_encoder
 from loguru import logger
-from model import __version__ as model_version
-from model.predict import make_prediction
+#from model import __version__ as "0.0.1"
+#from model.predict import make_prediction
+# Comentamos la importación del modelo y de make_prediction
+sed -i 's/^from model\.predict import make_prediction/# from model.predict import make_prediction/' app/api.py
+sed -i 's/^from model import __version__ as "0.0.1"/# from model import __version__ as "0.0.1"/' app/api.py
 
+# Cambiamos cualquier uso de "0.0.1" por un literal
+sed -i 's/"0.0.1"/"0.0.1"/g' app/api.pycat >> app/api.py << 'EOF'
+
+# --- Stub temporal cuando no está instalado el paquete del modelo ---
+def make_prediction(input_data):
+    # Devuelve una predicción de ejemplo y sin errores
+    try:
+        n = len(input_data) if hasattr(input_data, "__len__") else 1
+    except Exception:
+        n = 1
+    return {"predictions": [0]*n, "errors": None, "version": "0.0.1"}
+# --- Fin stub temporal ---
+EOF
 from app import __version__, schemas
 from app.config import settings
 
@@ -21,7 +37,7 @@ def health() -> dict:
     Root Get
     """
     health = schemas.Health(
-        name=settings.PROJECT_NAME, api_version=__version__, model_version=model_version
+        name=settings.PROJECT_NAME, api_version=__version__, "0.0.1"="0.0.1"
     )
 
     return health.dict()
